@@ -5,6 +5,7 @@
 
 #define STATIC_ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define FILE_TYPES_COUNT 8
+#define CURRENT_PATH "."
 
 typedef struct {
   size_t regular_files;
@@ -57,7 +58,7 @@ int isPathInException(const char* path) {
 
 int main() {
   DIR* dir;
-  static const char* current_path = ".";
+  static const char* current_path = CURRENT_PATH;
 
   dir = opendir(current_path);
   if (dir) {

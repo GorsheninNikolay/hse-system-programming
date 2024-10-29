@@ -10,8 +10,8 @@
 typedef struct {
   size_t regular_files;
   size_t directories;
-  size_t character_devices;
-  size_t block_devices;
+  size_t character_files;
+  size_t block_files;
   size_t fifos_or_pipes;
   size_t symbolic_links;
   size_t sockets;
@@ -28,7 +28,7 @@ void countFileStat(const char* path, FilesStat* filestat) {
   const mode_t mode = current_file_stat.st_mode;
   size_t* stats[FILE_TYPES_COUNT] = {
       &filestat->regular_files,     &filestat->directories,
-      &filestat->character_devices, &filestat->block_devices,
+      &filestat->character_files, &filestat->block_files,
       &filestat->fifos_or_pipes,    &filestat->symbolic_links,
       &filestat->sockets,           &filestat->unknown};
 
@@ -73,8 +73,8 @@ int main() {
     }
     fprintf(stdout, "Regular files: %zu\n", files_stat.regular_files);
     fprintf(stdout, "Directories: %zu\n", files_stat.directories);
-    fprintf(stdout, "Character devices: %zu\n", files_stat.character_devices);
-    fprintf(stdout, "Block devices: %zu\n", files_stat.block_devices);
+    fprintf(stdout, "Character files: %zu\n", files_stat.character_files);
+    fprintf(stdout, "Block files: %zu\n", files_stat.block_files);
     fprintf(stdout, "FIFOs/Pipes: %zu\n", files_stat.fifos_or_pipes);
     fprintf(stdout, "Symbolic links: %zu\n", files_stat.symbolic_links);
     fprintf(stdout, "Sockets: %zu\n", files_stat.sockets);

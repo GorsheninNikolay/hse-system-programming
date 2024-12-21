@@ -67,10 +67,10 @@ int main() {
     while ((dir_info = readdir(dir)) != NULL) {
       const char* path = dir_info->d_name;
       if (!isPathInException(path)) {
-        fprintf(stdout, "checking path %s\n", path);
         countFileStat(path, &files_stat);
       }
     }
+    // TODO Make 1000X if else if else if else if
     fprintf(stdout, "Regular files: %zu\n", files_stat.regular_files);
     fprintf(stdout, "Directories: %zu\n", files_stat.directories);
     fprintf(stdout, "Character files: %zu\n", files_stat.character_files);

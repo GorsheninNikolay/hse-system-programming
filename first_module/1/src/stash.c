@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define MAGIC_BYTES_SIZE 128
+#define MAGIC_BYTES_SIZE 128  // TODO Уменьшить
 #define DEFENSE_KEY "STASHED"
 #define KEY 0XA9
 

@@ -13,11 +13,16 @@
 void* send_message(void* arg) {
   int socket = *((int*)arg);
   char buffer[BUF_SIZE];
-  struct sockaddr_in broadcast_addr;
-  memset(&broadcast_addr, 0, sizeof(broadcast_addr));
-  broadcast_addr.sin_family = AF_INET;
-  broadcast_addr.sin_addr.s_addr = inet_addr(BROADCAST_IP);
-  broadcast_addr.sin_port = htons(atoi((char*)arg + sizeof(int)));
+  struct sockaddr_in addr;
+  memset(&addr, 0, sizeof(addr));
+  socklen_t len = sizeof(addr);
+
+  if (getsockname(socket, (struct sockaddr*)&addr, &len) == -1) {
+    fprintf(stderr, "getsockname operation is failed\n");
+    close(socket);
+    exit(1);
+  }
+  addr.sin_addr.s_addr = inet_addr(BROADCAST_IP);
 
   while (1) {
     fgets(buffer, BUF_SIZE, stdin);
@@ -25,8 +30,8 @@ void* send_message(void* arg) {
       close(socket);
       exit(1);
     }
-    sendto(socket, buffer, strlen(buffer), 0, (struct sockaddr*)&broadcast_addr,
-           sizeof(broadcast_addr));
+    sendto(socket, buffer, strlen(buffer), 0, (struct sockaddr*)&addr,
+           sizeof(addr));
   }
 }
 
@@ -87,6 +92,8 @@ int main(int argc, char* argv[]) {
 
   pthread_join(send_thread, &thread_result);
   pthread_join(recieve_thread, &thread_result);
+
   close(udp_socket);
+
   exit(0);
 }

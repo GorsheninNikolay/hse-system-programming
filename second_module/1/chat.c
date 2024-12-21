@@ -28,7 +28,7 @@ void* send_message(void* arg) {
     fgets(buffer, BUF_SIZE, stdin);
     if (!strcmp(buffer, "exit\n")) {
       close(socket);
-      exit(1);
+      exit(0);
     }
     sendto(socket, buffer, strlen(buffer), 0, (struct sockaddr*)&addr,
            sizeof(addr));

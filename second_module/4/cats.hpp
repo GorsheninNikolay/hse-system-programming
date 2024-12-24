@@ -12,6 +12,7 @@ class CatsManager
 {
 public:
     void CollectCat(std::filesystem::path &&path);
+    std::optional<std::filesystem::path> MakeZip();
     unsigned int CatsAmount();
 
 private:

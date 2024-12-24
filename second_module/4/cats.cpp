@@ -76,7 +76,7 @@ std::optional<std::filesystem::path> CatsManager::MakeZip()
         return std::nullopt;
     }
 
-    for (const auto &file_path : cats_)
+    for (const auto &[hash, file_path] : cats_)
     {
         zip_source_t *source = zip_source_file(zip, file_path.c_str(), 0, 0);
         if (source == nullptr)
@@ -91,18 +91,22 @@ std::optional<std::filesystem::path> CatsManager::MakeZip()
     return path;
 }
 
-void CatsManager::CollectCat(std::filesystem::path &&path)
+bool CatsManager::CollectCat(const size_t hash, const std::filesystem::path &path)
 {
     std::unique_lock<std::shared_mutex> lock(mutex_);
-    if (!cats_.count(path))
+    if (!cats_.count(hash))
     {
-        cats_.insert(std::move(path));
+        cats_[hash] = path;
         std::cout << "already fetched: " << cats_.size() << " cats" << std::endl;
+        return true;
     }
+    std::cerr << "cat with hash: " << hash << " already exists" << std::endl;
+    return false;
 }
 
-unsigned int CatsManager::CatsAmount()
+size_t CatsManager::CatsAmount()
 {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return cats_.size();
 }
 
@@ -160,9 +164,15 @@ void AsyncDownloadTask::OnReadingFinished(size_t bytes_read,
 
     boost::filesystem::create_directory("pics/");
     auto path = "pics/" + std::to_string(rand()) + ".jpg";
-    std::ofstream file(path);
-    file << resp_stream.rdbuf();
-    manager_->CollectCat(std::move(path));
+
+    std::ostringstream oss;
+    oss << resp_stream.rdbuf();
+    const auto raw_file = oss.str();
+    if (manager_->CollectCat(std::hash<std::string>{}(raw_file), path))
+    {
+        std::ofstream file(std::move(path));
+        file << raw_file;
+    }
 }
 
 int main()
@@ -173,14 +183,14 @@ int main()
 
     const auto cats_manager = std::make_shared<CatsManager>();
 
-    for (int i = 1; i <= 1; ++i)
+    for (int i = 1; i <= CATS_AMOUNT; ++i)
     {
         auto task = std::make_shared<AsyncDownloadTask>(endpoint, cats_manager, io_context, ec);
         task->handle();
     }
 
     std::vector<std::thread> threads;
-    for (int i = 0; i < std::min(12, 1); ++i)
+    for (int i = 1; i < std::min(12, CATS_AMOUNT); ++i)
     {
         threads.emplace_back([&io_context]
                              { io_context.run(); });
@@ -192,6 +202,23 @@ int main()
     {
         thread.join();
     }
+
+    io_context.restart();
+    auto amount = cats_manager->CatsAmount();
+
+    while (amount < CATS_AMOUNT)
+    {
+        std::cout << "We have " << amount << ", but need " << CATS_AMOUNT << std::endl;
+
+        auto task = std::make_shared<AsyncDownloadTask>(endpoint, cats_manager, io_context, ec);
+        task->handle();
+
+        io_context.run();
+        io_context.restart();
+
+        amount = cats_manager->CatsAmount();
+    }
+
     auto path = cats_manager->MakeZip();
     if (!path.has_value())
     {

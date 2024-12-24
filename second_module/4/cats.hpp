@@ -11,15 +11,15 @@
 class CatsManager
 {
 public:
-    void CollectCat(std::filesystem::path &&path);
+    bool CollectCat(const size_t hash, const std::filesystem::path& path);
     std::optional<std::filesystem::path> MakeZip();
-    unsigned int CatsAmount();
+    size_t CatsAmount();
 
 private:
     void FetchCat();
     bool IsCatUnique();
 
-    std::unordered_set<std::filesystem::path, std::hash<std::filesystem::path>> cats_;
+    std::unordered_map<size_t, std::filesystem::path> cats_;
     std::shared_mutex mutex_;
 };
 
@@ -31,7 +31,6 @@ public:
         : manager_(cats_manager), endpoint_(endpoint), sock_(io_context)
     {
     }
-
     void handle();
 
 private:
